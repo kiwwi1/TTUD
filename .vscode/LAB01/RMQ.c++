@@ -1,77 +1,69 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <climits>
+#include <cmath>
 using namespace std;
 
-class SegmentTree {
-public:
-    SegmentTree(const vector<int>& data) {
-        n = data.size();
-        tree.resize(2 * n);
-        // Build the tree
-        for (int i = 0; i < n; ++i) {
-            tree[n + i] = data[i];
-        }
-        for (int i = n - 1; i > 0; --i) {
-            tree[i] = min(tree[2 * i], tree[2 * i + 1]);
+// Hàm tiền xử lý Sparse Table
+void buildSparseTable(const vector<int>& a, vector<vector<int>>& M) {
+    int n = a.size();
+    int maxJ = log2(n); // j tối đa
+    for (int i = 0; i < n; i++) {
+        M[0][i] = i; // Đoạn 2^0 chỉ chứa 1 phần tử
+    }
+    for (int j = 1; (1 << j) <= n; j++) { // Với từng độ dài đoạn 2^j
+        for (int i = 0; i + (1 << j) - 1 < n; i++) {
+            // So sánh phần tử nhỏ nhất ở hai nửa đoạn
+            if (a[M[j - 1][i]] < a[M[j - 1][i + (1 << (j - 1))]]) {
+                M[j][i] = M[j - 1][i];
+            } else {
+                M[j][i] = M[j - 1][i + (1 << (j - 1))];
+            }
         }
     }
+}
 
-    // Function to return the minimum value in range [left, right]
-    int range_min(int left, int right) {
-        left += n;
-        right += n + 1;
-        int min_val = INT_MAX;
-        while (left < right) {
-            if (left % 2 == 1) {
-                min_val = min(min_val, tree[left]);
-                left++;
-            }
-            if (right % 2 == 1) {
-                right--;
-                min_val = min(min_val, tree[right]);
-            }
-            left /= 2;
-            right /= 2;
-        }
-        return min_val;
+// Hàm xử lý truy vấn RMQ(i, j) bằng Sparse Table
+int queryRMQ(const vector<int>& a, const vector<vector<int>>& M, int i, int j) {
+    int len = j - i + 1;
+    int k = log2(len); // Tìm đoạn phủ lớn nhất
+    if (a[M[k][i]] < a[M[k][j - (1 << k) + 1]]) {
+        return a[M[k][i]];
+    } else {
+        return a[M[k][j - (1 << k) + 1]];
     }
-
-private:
-    int n;
-    vector<int> tree;
-};
+}
 
 int main() {
-    // Input number of elements in the array
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    
+    // Đọc input
     int n;
     cin >> n;
     vector<int> a(n);
-
-    // Input the array elements
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < n; i++) {
         cin >> a[i];
     }
+    
+    // Tiền xử lý Sparse Table
+    int maxJ = log2(n);
+    vector<vector<int>> M(maxJ + 1, vector<int>(n)); // Sparse Table
+    buildSparseTable(a, M);
 
-    // Build the segment tree
-    SegmentTree segmentTree(a);
-
-    // Input number of queries
+    // Đọc số truy vấn
     int m;
     cin >> m;
 
-    int total_sum = 0;
-
-    // Process each query and compute the total sum of minimum values
-    for (int i = 0; i < m; ++i) {
-        int left, right;
-        cin >> left >> right;
-        total_sum += segmentTree.range_min(left, right);
+    // Xử lý các truy vấn
+    long long Q = 0; // Kết quả tổng
+    for (int k = 0; k < m; k++) {
+        int i, j;
+        cin >> i >> j;
+        Q += queryRMQ(a, M, i, j);
     }
 
-    // Output the result
-    cout << total_sum << endl;
+    // Xuất kết quả
+    cout << Q << endl;
 
     return 0;
 }

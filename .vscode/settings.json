@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "Largestblacksubrectangle.C": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "iostream": "cpp"
     }
 }
