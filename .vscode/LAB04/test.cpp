@@ -1,29 +1,27 @@
 #include <iostream>
-#include <unordered_map>
+#include <vector>
+#include <algorithm>
 using namespace std;
-int n, x[100],used[100]; 
-void solution(){
-    for(int i = 1; i <= n; i++){
-        cout << x[i];
+int main(){
+    int n,Q;
+    cin >> n  >> Q;
+    int a[100];
+
+    for(int i=0;i<n;i++){
+        cin >> a[i];
     }
-    cout << endl;
-}  
-void Try(int i){
-for(int j = 1 ; j <=n;j++){
-    if(used[j] == 0){
-        x[i] = j;
-        used[j] = 1;
-        if(i == n){
-            solution();
-        }
-        else Try(i+1);
-        used[j] = 0;
-    }
+    int r =0 ;int l =0;
+    int sum =0;
+    int count= 0;
+    int res = 1e9;
+    for( r= 0; r< n; r++){
+        sum += a[r];
+        while(sum >= Q){
+            count += n-r;
+            sum -= a[l];
+            l++;
+        }       
 }
-}
- 
-int main() {
-    cin >> n;
-    Try(1);
+cout << count;
     return 0;
 }

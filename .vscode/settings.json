@@ -2,6 +2,11 @@
     "files.associations": {
         "Largestblacksubrectangle.C": "cpp",
         "utility": "cpp",
-        "iostream": "cpp"
-    }
+        "iostream": "cpp",
+        "initializer_list": "cpp",
+        "type_traits": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }
