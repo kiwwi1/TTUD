@@ -13,7 +13,7 @@ int f;
 int f_best;
 int x_best[MAX];
 int cmin;
-int time_on_bus[MAX];
+
 
 void input() {
     cin >> N >> cap >> D;
@@ -29,7 +29,7 @@ void input() {
 int check(int v, int k) {
     if (appear[v] == 1) return 0;
     if (v > N) {
-        if (!appear[v-N] || time_on_bus[v-N] < D) return 0;  // Kiểm tra điều kiện thời gian
+        if (!appear[v-N]) return 0;  // Kiểm tra điều kiện thời gian
     } else {
         if (load + 1 > cap) return 0;
     }
@@ -55,18 +55,6 @@ void TRY(int k) {
             } else {
                 load -= 1;
             }
-
-            // Cập nhật thời gian khi di chuyển
-            if (k > 1) {
-                int prev = x[k-1];
-                int curr = x[k];
-                for (int i = 1; i <= N; i++) {
-                    if (appear[i] && time_on_bus[i] < D) {
-                        time_on_bus[i] += A[prev][curr];
-                    }
-                }
-            }
-
             appear[v] = 1;
             if (k == 2 * N) solution();
             else {
@@ -80,16 +68,6 @@ void TRY(int k) {
             else load += 1;
             appear[v] = 0;
             f -= A[x[k-1]][x[k]];
-
-            if (k > 1) {
-                int prev = x[k-1];
-                int curr = x[k];
-                for (int i = 1; i <= N; i++) {
-                    if (appear[i] && time_on_bus[i] <= D) {
-                        time_on_bus[i] -= A[prev][curr];
-                    }
-                }
-            }
         }
     }
 }
@@ -100,9 +78,6 @@ void solve() {
     f_best = 1000000;
     for (int i = 1; i <= 2 * N; i++) {
         appear[i] = 0;
-    }
-    for (int i = 1; i <= N; i++) {
-        time_on_bus[i] = 0;
     }
     x[0] = 0;
     TRY(1);

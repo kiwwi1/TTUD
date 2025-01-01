@@ -1,82 +1,100 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <climits>
-
+#include<bits/stdc++.h>
 using namespace std;
+int N, K, Q, Key;
+int d[15];
+int c[31][31];
+int x[15], y[15];
+int visited[30] = {0};
+int load[30] = {0};
+int segments = 0, cur_min = 0, nbr = 0, c_min = 10e5, res = 10e5;
 
-const int INF = INT_MAX;
-
-int n, K, Q;                        // Số khách hàng, số xe tải, dung lượng tối đa mỗi xe
-vector<int> d;                      // Yêu cầu số lượng hàng của mỗi khách hàng
-vector<vector<int>> c;              // Ma trận khoảng cách
-vector<int> load;                   // Tải trọng hiện tại của mỗi xe
-vector<int> route;                  // Tuyến đường hiện tại của 1 xe
-vector<bool> visited;               // Đánh dấu khách hàng đã được phục vụ
-int min_distance = INF;             // Tổng khoảng cách tối thiểu
-
-// Hàm tính khoảng cách của một lộ trình
-int calculateRouteDistance(const vector<int>& route) {
-    int distance = 0;
-    for (int i = 1; i < route.size(); ++i) {
-        distance += c[route[i - 1]][route[i]];
-    }
-    return distance;
+bool checkX(int v, int k){
+    if (v > 0 && visited[v] == 1) return false;
+    if (load[k] + d[v] > Q) return false;
+    return true;
 }
 
-// Hàm quay lui để tìm lời giải tối ưu
-void backtrack(int truck, int total_distance) {
-    if (truck == K) { // Nếu tất cả xe đã được thử
-        for (int i = 1; i <= n; ++i) {
-            if (!visited[i]) return; // Nếu có khách hàng chưa được phục vụ, bỏ qua
+void updateRes(){
+    if (res > cur_min) res = cur_min;
+}
+
+void TryX(int s, int k){
+    if (s == 0){    
+        if (k < K){
+            TryX(y[k + 1], k + 1);
+            return;
         }
-        min_distance = min(min_distance, total_distance);
-        return;
     }
-
-    // Nếu xe tải hiện tại không phục vụ khách nào
-    backtrack(truck + 1, total_distance);
-
-    // Thử các lộ trình khả thi cho xe tải hiện tại
-    for (int i = 1; i <= n; ++i) {
-        if (!visited[i] && load[truck] + d[i] <= Q) { // Chỉ phục vụ nếu chưa đến thăm và còn tải trọng
-            visited[i] = true;
-            load[truck] += d[i];
-            route.push_back(i); // Thêm khách hàng vào lộ trình
-
-            // Tính khoảng cách từ điểm trước đó đến khách hàng hiện tại
-            int last = route.size() > 1 ? route[route.size() - 2] : 0;
-            int new_distance = total_distance + c[last][i];
-
-            // Quay lui để tiếp tục thử các khách hàng khác
-            backtrack(truck, new_distance);
-
-            // Quay lui để hoàn tác
-            visited[i] = false;
-            load[truck] -= d[i];
-            route.pop_back();
+    for (int v = 0; v <= N; v++){
+        if (checkX(v, k)){
+            x[s] = v;
+            visited[v] = 1;
+            load[k] += d[v];
+            segments += 1;
+            cur_min += c[s][v];
+            if (v > 0){
+                if(cur_min + (N + nbr - segments) * c_min < res) TryX(v, k);
+            } else{
+                if (k == K){
+                    if (segments == N + nbr) updateRes();
+                }
+                else{
+                    if(cur_min + (N + nbr - segments) * c_min < res) TryX(y[k + 1], k + 1);
+                }
+            }
+            visited[v] = 0;
+            segments -= 1;
+            cur_min -= c[s][v];
+            load[k] -= d[v];
         }
     }
 }
 
-int main() {
-    // Nhập dữ liệu
-    cin >> n >> K >> Q;
-    d.resize(n + 1);
-    c.resize(n + 1, vector<int>(n + 1));
-    visited.resize(n + 1, false);
-    load.resize(K, 0);
+bool checkY(int v, int k){
+    if(v == 0) return false;
+    if(load[k] + d[v] > Q) return false;
+    if (visited[v]) return false;
+    return true;
+}
 
-    for (int i = 1; i <= n; ++i) cin >> d[i];
-    for(int i = 0; i<=n ; i++){
-        for (int j = 0; j <=n; j++) 
-        cin >> c[i][j];
+void TryY(int k){
+    int s = 0;
+    if(y[k - 1] > 0) s = y[k - 1] + 1;  
+    for (int v = s; v <= N; v++){
+        if (checkY(v, k)){
+            y[k] = v;
+            if (v > 0) segments += 1;
+            visited[v] = 1; 
+            cur_min += c[0][v];
+            load[k] = load[k] + d[v];
+            if (k < K) TryY(k + 1);
+            else{
+                nbr = segments;
+                TryX(y[1], 1);
+            }
+            load[k] -= d[v];
+            cur_min -= c[0][v];
+            visited[v] = 0;
+            if(v > 0) segments -= 1;
+        }
     }
+}
 
-    // Giải bài toán
-    backtrack(0, 0);
-
-    // Xuất kết quả
-    cout << min_distance << endl;
-    return 0;
+int main(){
+    cin >> N >> Key >> Q;
+    for (int i = 1; i <= N; i++){
+        cin >> d[i];
+    }
+    for (int i = 0; i < N + 1; i++)
+        for (int j = 0; j < N + 1; j++){
+            cin >> c[i][j];
+            if (i != j){
+                if (c[i][j] < c_min) c_min = c[i][j];
+            }
+        }
+    y[0] = 0;
+    for(K = 1; K <= Key; K++){
+    TryY(1);
+    }
+    cout << res;
 }
